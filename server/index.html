@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+  <head>
+    <title>color loop</title>
+    <script type='text/javascript' src='tinycolor.js'></script>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <script type='text/javascript' src="gyronorm.complete.js"></script>
+    <style>
+      body { 
+        margin: 0; 
+      }
+      #swatch {
+        width: 50px;
+        height: 50px;
+        border: 1px solid white;
+        position: absolute;
+        display: none;
+        z-index: 100;
+      }
+      #draggable {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      #draggable:hover {
+        cursor: none;
+      }
+      #color {
+        position: absolute;
+        top: 350px;
+        left: 0;
+        width: 300px;
+        height: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="color"></div>
+
+    <canvas id="loop"></canvas>
+    <img id="draggable" src="spectrum.png" />
+    <div id="swatch"></div>
+
+    <script>
+      var socket = io();
+
+      var self = getParam("self");
+      var other = getParam("other");
+      console.log(self, other);
+
+      var startX, startY; 
+      var dragY = 0;
+      var isDrag = false;
+
+      var swatch = document.getElementById("swatch");
+
+      function getParam(name) {
+        let match = RegExp("[?&]" + name + "=([^&]*)").exec(window.location.search);
+        return match && decodeURIComponent(match[1].replace(/\+/g, " "));
+      };
+
+      function rgbToHsl(r, g, b) {
+        return tinycolor({ r: r, g: g, b: b }).toHsl();
+      }
+
+      function hslToHex(h, s, l) {
+        return tinycolor({ h: h, s: s, l: l }).toHexString();
+      }
+
+      function rgbToHex(r, g, b) {
+        if (r > 255 || g > 255 || b > 255)
+          throw "Invalid color component";
+        return ((r << 16) | (g << 8) | b).toString(16);
+      }
+
+      function colorAt(x, y) {
+        var data = ctx.getImageData(x, y, 1, 1).data; 
+        return "#" + ("000000" + rgbToHex(data[0], data[1], data[2])).slice(-6);
+      }
+
+      function showSwatch(x, y) {
+        var colorX = isDrag ? startX : x;
+        var colorY = isDrag ? startY : y;
+
+        var data = ctx.getImageData(colorX, colorY, 1, 1).data;
+        var hsl = rgbToHsl(data[0], data[1], data[2]);
+        var l = hsl.l - dragY/400;
+        l = Math.max(Math.min(l, 1.0), 0.0);
+        var hex = hslToHex(hsl.h, hsl.s, l);
+        x = Math.round(x);
+        y = Math.round(y);
+        swatch.style.display = "block";
+        swatch.style.left = (x - 60) + "px";
+        swatch.style.top = (y - 60) + "px";
+        swatch.style.background = hex;
+        socket.emit('pick-color', { from: self, to: other, color: hex });
+      }
+
+      function hideSwatch() {
+        swatch.style.display = "none";
+      }
+
+      function showColor(hex) {
+        var div = document.getElementById("color");
+        console.log(div);
+        div.style.backgroundColor = hex;
+      }
+
+      var width = Math.floor(window.innerWidth);
+      var height = Math.floor(window.innerHeight);
+      var size = 300; //Math.min(width, height);
+
+      var canvas = document.getElementById("loop");
+      var ctx = canvas.getContext("2d");
+      var draggable = document.getElementById("draggable");
+
+      canvas.width = size;
+      canvas.height = size;
+      draggable.style.width = size + "px";
+      draggable.style.height = size + "px";
+
+      var img = new Image();
+      img.addEventListener("load", function() {
+        ctx.drawImage(img, 0, 0, size, size);
+      }, false);
+      img.src = "spectrum.png";
+
+      draggable.addEventListener("mousemove", function(event) {
+        showSwatch(event.clientX, event.clientY);
+      }, false);
+
+      document.addEventListener("dragstart", function(event) {
+        isDrag = true;
+        startX = event.clientX;
+        startY = event.clientY;
+        var blank = new Image();
+        blank.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        event.dataTransfer.setDragImage(blank, 0, 0);
+      }, false);
+
+      document.addEventListener("drag", function(event) {
+        dragY = event.clientY - startY;        
+        showSwatch(event.clientX, event.clientY);
+      }, false);
+
+      document.addEventListener("dragend", function(event) {
+        isDrag = false;
+        dragY = 0;
+        hideSwatch();
+      }, false);
+
+      socket.on("show-color", function(data) {
+        if (data.to == self) {
+          showColor(data.color);
+        }
+      });
+    </script>
+  </body>
+</html>
