@@ -156,7 +156,7 @@
       });
 
       function normalizeAngle(angle) {
-        return Math.min(360 - angle, angle - 0);
+        return Math.abs(Math.min(360 - angle, angle - 0));
       }
 
       if (role == "input") {
