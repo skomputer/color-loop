@@ -55,7 +55,7 @@
       var swatch = document.getElementById("swatch");
 
       function getParam(name) {
-        let match = RegExp("[?&]" + name + "=([^&]*)").exec(window.location.search);
+        var match = RegExp("[?&]" + name + "=([^&]*)").exec(window.location.search);
         return match && decodeURIComponent(match[1].replace(/\+/g, " "));
       };
 
