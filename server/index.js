@@ -29,6 +29,10 @@ io.on("connection", function(socket) {
       color: data.color
     });
   });
+
+  socket.on("orientation", function(data) {
+    console.log("received orientation", data);
+  });
 });
 
 http.listen(3000, function() {

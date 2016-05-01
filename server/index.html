@@ -154,6 +154,19 @@
           showColor(data.color);
         }
       });
+
+      var gn = new GyroNorm();
+
+      gn.init({
+        frequency: 10,
+        orientationBase: GyroNorm.GAME,
+      }).then(function() {
+        gn.start(function(data) {
+          console.log(data.do.alpha, data.do.beta, data.do.gamma);
+          socket.emit("orientation", data.do);
+        });
+      });
+
     </script>
   </body>
 </html>
