@@ -171,7 +171,7 @@
             var s = normalizeAngle(data.do.beta);
             var l = normalizeAngle(data.do.gamma);
 
-            sockt.emit("pick-color", {
+            socket.emit("pick-color", {
               from: self,
               to: other,
               color: hslToHex(h, s, l)
