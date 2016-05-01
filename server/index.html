@@ -46,7 +46,7 @@
 
       var self = getParam("self");
       var other = getParam("other");
-      console.log(self, other);
+      var role = getParam("role") || "output";
 
       var startX, startY; 
       var dragY = 0;
@@ -155,18 +155,30 @@
         }
       });
 
-      var gn = new GyroNorm();
+      function normalizeAngle(angle) {
+        return Math.min(360 - angle, angle - 0);
+      }
 
-      gn.init({
-        frequency: 10,
-        orientationBase: GyroNorm.GAME,
-      }).then(function() {
-        gn.start(function(data) {
-          console.log(data.do.alpha, data.do.beta, data.do.gamma);
-          socket.emit("orientation", data.do);
+      if (role == "input") {
+        var gn = new GyroNorm();
+
+        gn.init({
+          frequency: 10,
+          orientationBase: GyroNorm.GAME,
+        }).then(function() {
+          gn.start(function(data) {
+            var h = normalizeAngle(data.do.alpha);
+            var s = normalizeAngle(data.do.beta);
+            var l = normalizeAngle(data.do.gamma);
+
+            sockt.emit("pick-color", {
+              from: self,
+              to: other,
+              color: hslToHex(h, s, l)
+            });
+          });
         });
-      });
-
+      }
     </script>
   </body>
 </html>
