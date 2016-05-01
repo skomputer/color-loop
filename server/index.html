@@ -102,7 +102,6 @@
 
       function showColor(hex) {
         var div = document.getElementById("color");
-        console.log(div);
         div.style.backgroundColor = hex;
       }
 
@@ -151,6 +150,7 @@
 
       socket.on("show-color", function(data) {
         if (data.to == self) {
+          console.log("received color", data.color);
           showColor(data.color);
         }
       });
@@ -171,6 +171,7 @@
             var s = normalizeAngle(data.do.beta);
             var l = normalizeAngle(data.do.gamma);
 
+            socket.emit("orientation", data.do);
             socket.emit("pick-color", {
               from: self,
               to: other,
