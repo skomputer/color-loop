@@ -159,6 +159,10 @@
         return Math.abs(Math.min(360 - angle, angle - 0));
       }
 
+      function cleanRatio(number) {
+        return Math.round(number * 100) / 100;
+      }
+
       if (role == "input") {
         var gn = new GyroNorm();
 
@@ -168,8 +172,8 @@
         }).then(function() {
           gn.start(function(data) {
             var h = normalizeAngle(data.do.alpha);
-            var s = normalizeAngle(data.do.beta);
-            var l = normalizeAngle(data.do.gamma);
+            var s = normalizeAngle(data.do.beta) / 180;
+            var l = normalizeAngle(data.do.gamma) / 180;
 
             socket.emit("orientation", data.do);
             socket.emit("pick-color", {
